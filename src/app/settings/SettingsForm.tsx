@@ -101,13 +101,22 @@ export default function SettingsForm({
       <section className="space-y-3">
         <h2 className="text-sm uppercase tracking-wider text-muted">Challenge</h2>
         {activeChallengeId ? (
-          <button
-            onClick={handleEnd}
-            disabled={pending}
-            className="w-full rounded-md border border-danger/40 text-danger bg-danger/10 py-3"
-          >
-            End current challenge
-          </button>
+          <>
+            <button
+              onClick={() => router.push("/edit-challenge")}
+              disabled={pending}
+              className="w-full rounded-md border border-border bg-surface py-3"
+            >
+              Edit commitments &amp; allowances
+            </button>
+            <button
+              onClick={handleEnd}
+              disabled={pending}
+              className="w-full rounded-md border border-danger/40 text-danger bg-danger/10 py-3"
+            >
+              End current challenge
+            </button>
+          </>
         ) : (
           <div className="rounded-lg border border-border bg-surface p-3 text-muted text-sm">
             No active challenge.
