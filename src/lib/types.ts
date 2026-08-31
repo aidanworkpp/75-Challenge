@@ -30,6 +30,8 @@ export interface Challenge {
   length_days: number;
   status: ChallengeStatus;
   restart_on_miss: boolean;
+  rest_days_per_week: number;
+  cheat_meals_per_week: number;
   created_at: string;
 }
 
@@ -39,6 +41,8 @@ export interface DailyLog {
   log_date: string;
   complete: boolean;
   notes: string | null;
+  rest_day: boolean;
+  cheat_meal: boolean;
 }
 
 export interface DailyLogEntry {

@@ -8,9 +8,11 @@ import StreakBadge from "@/components/StreakBadge";
 import { challengeDayNumber, formatDayLong, isoAddDays, todayIso } from "@/lib/date";
 import { currentStreak } from "@/lib/streak";
 import { reconcileChallengeState } from "@/lib/challenge-state";
-import { isItemActiveOn } from "@/lib/completion";
+import { isItemActiveOn, isItemExcused } from "@/lib/completion";
+import { allowanceStatusForWeek } from "@/lib/allowances";
 import LogYesterdayButton from "@/components/LogYesterdayButton";
 import YesterdaySettler from "@/components/YesterdaySettler";
+import RestCheatControls from "@/components/RestCheatControls";
 import type { DailyLog } from "@/lib/types";
 
 export default async function TodayPage() {
@@ -42,6 +44,10 @@ export default async function TodayPage() {
   // Only show items active today (e.g. photo scheduled for Sundays hides on other days)
   const activeItems = items.filter((i) => isItemActiveOn(i, today));
 
+  const restActive = todaysLog?.rest_day ?? false;
+  const cheatActive = todaysLog?.cheat_meal ?? false;
+  const allowance = allowanceStatusForWeek(challenge, logs, today);
+
   const dayNum = challengeDayNumber(challenge.start_date, today);
   const streak = currentStreak(logs);
   const dayComplete = todaysLog?.complete ?? false;
@@ -58,12 +64,25 @@ export default async function TodayPage() {
           </div>
         )}
 
+        {!preStart && (
+          <RestCheatControls
+            challengeId={challenge.id}
+            restBudget={challenge.rest_days_per_week}
+            cheatBudget={challenge.cheat_meals_per_week}
+            restRemaining={allowance.restRemaining}
+            cheatRemaining={allowance.cheatRemaining}
+            restActive={restActive}
+            cheatActive={cheatActive}
+          />
+        )}
+
         <ul className="space-y-2">
           {activeItems.map((item) => {
             const entry = todaysEntries.find((e) => e.commitment_item_id === item.id);
+            const excused = isItemExcused(item, { restDay: restActive, cheatMeal: cheatActive });
             return (
               <li key={item.id}>
-                <CommitmentRow item={item} entry={entry} />
+                <CommitmentRow item={item} entry={entry} excused={excused} />
               </li>
             );
           })}

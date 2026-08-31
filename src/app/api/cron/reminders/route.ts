@@ -91,6 +91,7 @@ export async function GET(req: Request) {
       totalDays: ch.length_days,
       items: (items ?? []) as CommitmentItem[],
       entries,
+      allowances: { restDay: log?.rest_day === true, cheatMeal: log?.cheat_meal === true },
     });
 
     try {

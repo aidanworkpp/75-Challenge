@@ -17,6 +17,8 @@ export interface TierTemplate {
   defaultLength: number;
   commitments: CommitmentDraft[];
   photoDefault: { enabled: boolean; weekdays: number[] };
+  restDaysPerWeek: number;
+  cheatMealsPerWeek: number;
 }
 
 const daily = (c: Omit<CommitmentDraft, "active_weekdays">): CommitmentDraft => ({
@@ -36,6 +38,8 @@ export const TIER_TEMPLATES: Record<Exclude<Tier, "custom">, TierTemplate> = {
     restart_on_miss: true,
     defaultLength: 75,
     photoDefault: { enabled: true, weekdays: ALL_WEEKDAYS },
+    restDaysPerWeek: 0,
+    cheatMealsPerWeek: 0,
     commitments: [
       daily({ label: "Workout 1 (indoor/gym)", type: "numeric", target_value: 45, unit: "min", category: "workout", optional: false }),
       daily({ label: "Workout 2 (outdoors)",   type: "numeric", target_value: 45, unit: "min", category: "workout", optional: false }),
@@ -51,6 +55,8 @@ export const TIER_TEMPLATES: Record<Exclude<Tier, "custom">, TierTemplate> = {
     restart_on_miss: false,
     defaultLength: 75,
     photoDefault: { enabled: true, weekdays: [0] }, // Sundays
+    restDaysPerWeek: 1,
+    cheatMealsPerWeek: 1,
     commitments: [
       daily({ label: "Workout",                    type: "numeric", target_value: 45, unit: "min", category: "workout", optional: false }),
       daily({ label: "Optional 2nd workout",       type: "numeric", target_value: 30, unit: "min", category: "workout", optional: true }),
@@ -66,6 +72,8 @@ export const TIER_TEMPLATES: Record<Exclude<Tier, "custom">, TierTemplate> = {
     restart_on_miss: false,
     defaultLength: 75,
     photoDefault: { enabled: false, weekdays: [] },
+    restDaysPerWeek: 2,
+    cheatMealsPerWeek: 1,
     commitments: [
       daily({ label: "Workout",         type: "numeric", target_value: 30, unit: "min", category: "workout", optional: false }),
       daily({ label: "Eat mindfully",   type: "boolean", target_value: null, unit: null, category: "diet", optional: false }),

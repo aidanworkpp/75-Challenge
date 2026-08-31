@@ -10,6 +10,8 @@ export interface CreateChallengeInput {
   startDate: string; // yyyy-mm-dd
   lengthDays: number;
   restartOnMiss: boolean;
+  restDaysPerWeek: number;
+  cheatMealsPerWeek: number;
   commitments: CommitmentDraft[];
 }
 
@@ -41,6 +43,8 @@ export async function createChallenge(input: CreateChallengeInput) {
       length_days: input.lengthDays,
       status: "active",
       restart_on_miss: input.restartOnMiss,
+      rest_days_per_week: Math.min(7, Math.max(0, Math.round(input.restDaysPerWeek))),
+      cheat_meals_per_week: Math.min(7, Math.max(0, Math.round(input.cheatMealsPerWeek))),
     })
     .select("*")
     .single();

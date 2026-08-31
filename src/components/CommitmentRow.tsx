@@ -12,10 +12,12 @@ export default function CommitmentRow({
   item,
   entry,
   dateIso,
+  excused,
 }: {
   item: CommitmentItem;
   entry: DailyLogEntry | undefined;
   dateIso?: string;
+  excused?: boolean;
 }) {
   const serverHit = entry?.bool_value === true;
   const [hit, setHit] = useState(serverHit);
@@ -43,20 +45,26 @@ export default function CommitmentRow({
       onClick={toggle}
       className={clsx(
         "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
-        hit ? "bg-success/10 border-success/40" : "bg-surface border-border active:bg-surface2",
+        excused
+          ? "bg-surface border-border opacity-60"
+          : hit
+          ? "bg-success/10 border-success/40"
+          : "bg-surface border-border active:bg-surface2",
       )}
     >
       <span
         className={clsx(
           "w-7 h-7 rounded-md border-2 flex items-center justify-center text-base shrink-0",
-          hit ? "bg-success border-success text-black" : "border-border",
+          hit && !excused ? "bg-success border-success text-black" : "border-border",
         )}
       >
         {hit ? "✓" : ""}
       </span>
       <div className="flex-1">
-        <div className="font-medium">{item.label}</div>
-        {(descriptor || item.optional) && (
+        <div className={clsx("font-medium", excused && "line-through text-muted")}>{item.label}</div>
+        {excused ? (
+          <div className="text-xs text-accent">excused today</div>
+        ) : (descriptor || item.optional) && (
           <div className="text-xs text-muted">
             {descriptor}
             {descriptor && item.optional && " · "}

@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isDayCompleteFor } from "@/lib/completion";
-import { todayIso } from "@/lib/date";
-import type { CommitmentItem, DailyLogEntry } from "@/lib/types";
+import { allowanceStatusForWeek } from "@/lib/allowances";
+import { todayIso, isoAddDays } from "@/lib/date";
+import type { Challenge, CommitmentItem, DailyLog, DailyLogEntry } from "@/lib/types";
 
 async function requireUser() {
   const supabase = createClient();
@@ -44,6 +45,7 @@ async function recomputeAndPersistCompletion(dailyLogId: string) {
     (items ?? []) as CommitmentItem[],
     (entries ?? []) as DailyLogEntry[],
     log.log_date as string,
+    { restDay: log.rest_day === true, cheatMeal: log.cheat_meal === true },
   );
   await supabase
     .from("daily_logs")
@@ -82,6 +84,41 @@ export async function setBooleanEntry(itemId: string, value: boolean, dateIso?: 
       { onConflict: "daily_log_id,commitment_item_id" },
     );
 
+  await recomputeAndPersistCompletion(log.id);
+  revalidatePath("/");
+}
+
+// Rest day / cheat meal toggle for today. Enforces the per-challenge-week
+// budget server-side (defence-in-depth beyond the UI hiding the control).
+export async function setDayFlag(challengeId: string, kind: "rest" | "cheat", value: boolean) {
+  const { supabase, user } = await requireUser();
+  const { data: ch } = await supabase.from("challenges").select("*").eq("id", challengeId).single();
+  if (!ch || ch.user_id !== user.id) throw new Error("Not your challenge");
+
+  const date = todayIso();
+  const endDate = isoAddDays(ch.start_date, ch.length_days - 1);
+  if (date < ch.start_date || date > endDate) throw new Error("Outside the challenge window.");
+
+  if (value) {
+    const budget = kind === "rest" ? ch.rest_days_per_week : ch.cheat_meals_per_week;
+    if (budget <= 0) throw new Error(kind === "rest" ? "No rest days in this challenge." : "No cheat meals in this challenge.");
+    const { data: logs } = await supabase
+      .from("daily_logs")
+      .select("*")
+      .eq("challenge_id", challengeId);
+    const rows = (logs ?? []) as DailyLog[];
+    const status = allowanceStatusForWeek(ch as Challenge, rows, date);
+    const todaysLog = rows.find((l) => l.log_date === date);
+    const alreadyOnToday = kind === "rest" ? todaysLog?.rest_day : todaysLog?.cheat_meal;
+    const remaining = kind === "rest" ? status.restRemaining : status.cheatRemaining;
+    if (!alreadyOnToday && remaining <= 0) {
+      throw new Error(kind === "rest" ? "You've used your rest days this week." : "You've used your cheat meals this week.");
+    }
+  }
+
+  const log = await upsertTodayLog(challengeId, date);
+  const patch = kind === "rest" ? { rest_day: value } : { cheat_meal: value };
+  await supabase.from("daily_logs").update(patch).eq("id", log.id);
   await recomputeAndPersistCompletion(log.id);
   revalidatePath("/");
 }

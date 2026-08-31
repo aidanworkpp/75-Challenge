@@ -16,22 +16,30 @@ export function isEntryHit(_item: CommitmentItem, entry: DailyLogEntry | undefin
   return entry?.bool_value === true;
 }
 
-// A day is complete iff every REQUIRED item that is active on that day is hit.
+export interface DayAllowances {
+  restDay?: boolean;    // excuses required workout-category items
+  cheatMeal?: boolean;  // excuses required diet-category items
+}
+
+// An item is "excused" on a day if a rest day covers its workout category
+// or a cheat meal covers its diet category.
+export function isItemExcused(item: CommitmentItem, allow: DayAllowances): boolean {
+  if (allow.restDay && item.category === "workout") return true;
+  if (allow.cheatMeal && item.category === "diet") return true;
+  return false;
+}
+
+// A day is complete iff every REQUIRED item that is active on that day AND not
+// excused (by a rest day / cheat meal) is hit.
 // Optional items don't gate completion; items inactive today are ignored.
 export function isDayCompleteFor(
   items: CommitmentItem[],
   entries: DailyLogEntry[],
   dateIso: string,
+  allow: DayAllowances = {},
 ): boolean {
   const entryByItem = new Map(entries.map((e) => [e.commitment_item_id, e]));
   return items
-    .filter((i) => !i.optional && isItemActiveOn(i, dateIso))
+    .filter((i) => !i.optional && isItemActiveOn(i, dateIso) && !isItemExcused(i, allow))
     .every((i) => isEntryHit(i, entryByItem.get(i.id)));
-}
-
-// Kept for callers that don't have the date handy — treats today as "every day"
-// (used by the server action which only mutates today's log).
-export function isDayComplete(items: CommitmentItem[], entries: DailyLogEntry[]): boolean {
-  const today = new Date().toISOString().slice(0, 10);
-  return isDayCompleteFor(items, entries, today);
 }

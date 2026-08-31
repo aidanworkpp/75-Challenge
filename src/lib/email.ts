@@ -1,6 +1,6 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import type { CommitmentItem, DailyLogEntry } from "./types";
-import { isEntryHit, isItemActiveOn } from "./completion";
+import { isEntryHit, isItemActiveOn, isItemExcused, type DayAllowances } from "./completion";
 import { todayIso } from "./date";
 
 // Gmail SMTP via nodemailer. Requires:
@@ -38,11 +38,13 @@ export function afternoonTemplate(opts: {
   totalDays: number;
   items: CommitmentItem[];
   entries: DailyLogEntry[];
+  allowances?: DayAllowances;
 }) {
   const today = todayIso();
+  const allow = opts.allowances ?? {};
   const activeItems = opts.items.filter((i) => isItemActiveOn(i, today));
   const missed = activeItems.filter(
-    (i) => !i.optional && !isEntryHit(i, opts.entries.find((e) => e.commitment_item_id === i.id)),
+    (i) => !i.optional && !isItemExcused(i, allow) && !isEntryHit(i, opts.entries.find((e) => e.commitment_item_id === i.id)),
   );
   const remaining = missed.length;
 
@@ -54,10 +56,12 @@ export function afternoonTemplate(opts: {
   const listHtml = activeItems
     .map((i) => {
       const entry = opts.entries.find((e) => e.commitment_item_id === i.id);
+      const excused = isItemExcused(i, allow);
       const hit = isEntryHit(i, entry);
-      const mark = hit ? "✓" : "○";
-      const colour = hit ? "#22c55e" : "#8b93a3";
-      return `<li style="margin:6px 0;color:${colour}">${mark} ${escapeHtml(i.label)}</li>`;
+      const mark = excused ? "–" : hit ? "✓" : "○";
+      const colour = excused ? "#8b93a3" : hit ? "#22c55e" : "#8b93a3";
+      const suffix = excused ? " (excused)" : "";
+      return `<li style="margin:6px 0;color:${colour}">${mark} ${escapeHtml(i.label)}${suffix}</li>`;
     })
     .join("");
 

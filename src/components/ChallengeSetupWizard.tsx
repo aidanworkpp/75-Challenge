@@ -18,6 +18,8 @@ export default function ChallengeSetupWizard() {
   const [photoEnabled, setPhotoEnabled] = useState<boolean>(TIER_TEMPLATES.hard.photoDefault.enabled);
   const [photoWeekdays, setPhotoWeekdays] = useState<number[]>(TIER_TEMPLATES.hard.photoDefault.weekdays);
   const [restartOnMiss, setRestartOnMiss] = useState<boolean>(TIER_TEMPLATES.hard.restart_on_miss);
+  const [restDaysPerWeek, setRestDaysPerWeek] = useState<number>(TIER_TEMPLATES.hard.restDaysPerWeek);
+  const [cheatMealsPerWeek, setCheatMealsPerWeek] = useState<number>(TIER_TEMPLATES.hard.cheatMealsPerWeek);
   const [lengthDays, setLengthDays] = useState<number>(TIER_TEMPLATES.hard.defaultLength);
   const [startDate, setStartDate] = useState<string>(todayIso());
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +32,8 @@ export default function ChallengeSetupWizard() {
     setPhotoEnabled(tpl.photoDefault.enabled);
     setPhotoWeekdays([...tpl.photoDefault.weekdays]);
     setRestartOnMiss(tpl.restart_on_miss);
+    setRestDaysPerWeek(tpl.restDaysPerWeek);
+    setCheatMealsPerWeek(tpl.cheatMealsPerWeek);
     setLengthDays(tpl.defaultLength);
   }
 
@@ -73,6 +77,8 @@ export default function ChallengeSetupWizard() {
         startDate,
         lengthDays,
         restartOnMiss,
+        restDaysPerWeek,
+        cheatMealsPerWeek,
         commitments: allCommitments,
       });
     } catch (e: unknown) {
@@ -327,6 +333,35 @@ export default function ChallengeSetupWizard() {
               </span>
             </span>
           </label>
+
+          <div className="rounded-lg border border-border bg-surface p-3 space-y-3">
+            <div className="text-sm font-medium">Weekly allowances</div>
+            <p className="text-xs text-muted -mt-1">
+              Rest days excuse workouts; cheat meals excuse the diet — for that day only. Reading, water and photos still count. Used allowances don&apos;t break your streak.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col">
+                <span className="text-xs text-muted">Rest days / week</span>
+                <select
+                  value={restDaysPerWeek}
+                  onChange={(e) => setRestDaysPerWeek(Number(e.target.value))}
+                  className="mt-1 bg-surface2 border border-border rounded px-2 py-2"
+                >
+                  {[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </label>
+              <label className="flex flex-col">
+                <span className="text-xs text-muted">Cheat meals / week</span>
+                <select
+                  value={cheatMealsPerWeek}
+                  onChange={(e) => setCheatMealsPerWeek(Number(e.target.value))}
+                  className="mt-1 bg-surface2 border border-border rounded px-2 py-2"
+                >
+                  {[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
 
           {error && <p className="text-danger text-sm">{error}</p>}
 
