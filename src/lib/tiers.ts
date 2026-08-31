@@ -5,7 +5,7 @@ import type { CommitmentDraft, Tier } from "./types";
 // [A7] restart_on_miss defaults: Hard = true, Medium/Soft = false.
 
 export interface TierTemplate {
-  id: Tier;
+  id: Exclude<Tier, "custom">;
   name: string;
   tagline: string;
   restart_on_miss: boolean;
