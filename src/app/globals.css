@@ -20,3 +20,52 @@ input, select, textarea {
 /* Safe area for mobile */
 .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
 .pt-safe { padding-top: max(env(safe-area-inset-top), 0.5rem); }
+
+/* --- Plan markdown styles --- */
+.prose-plan h1 { font-size: 1.25rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; }
+.prose-plan h2 { font-size: 1.1rem;  font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; }
+.prose-plan h3 { font-size: 1rem;    font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.35rem; }
+.prose-plan p { margin: 0.5rem 0; line-height: 1.55; }
+.prose-plan strong { font-weight: 600; color: #eef1f6; }
+.prose-plan em { font-style: italic; color: #8b93a3; }
+.prose-plan ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose-plan ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+.prose-plan li { margin: 0.15rem 0; }
+.prose-plan hr { border: none; border-top: 1px solid #2a2e38; margin: 1rem 0; }
+.prose-plan code { background: #1e2129; padding: 1px 5px; border-radius: 3px; font-size: 0.9em; }
+.prose-plan table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.85rem; }
+.prose-plan th, .prose-plan td { border: 1px solid #2a2e38; padding: 4px 8px; text-align: left; }
+.prose-plan th { background: #1e2129; }
+.prose-plan blockquote { border-left: 3px solid #2a2e38; padding-left: 0.75rem; color: #8b93a3; margin: 0.5rem 0; }
+
+/* --- Print styles (browser Save-as-PDF) --- */
+@media print {
+  /* Force light output for printing */
+  html, body { background: white !important; color: black !important; }
+
+  /* Hide app chrome */
+  nav, header, .print\:hidden { display: none !important; }
+
+  /* Let the plan take the whole page */
+  main { padding: 0 !important; max-width: none !important; }
+  .plan-print { max-width: none !important; }
+
+  /* Rewrite dark-theme colors */
+  .plan-print, .plan-print * {
+    background: white !important;
+    color: black !important;
+    border-color: #ddd !important;
+  }
+  .plan-print h1, .plan-print h2, .plan-print h3, .plan-print strong { color: black !important; }
+  .plan-print em, .plan-print blockquote { color: #555 !important; }
+  .prose-plan hr { border-top-color: #ddd !important; }
+  .prose-plan th { background: #f4f4f5 !important; }
+  .prose-plan code { background: #f4f4f5 !important; }
+
+  /* Compact spacing for print */
+  .prose-plan h1 { font-size: 1.35rem; }
+  .prose-plan h2 { font-size: 1.15rem; }
+  .prose-plan p, .prose-plan li { line-height: 1.4; }
+
+  a { color: inherit !important; text-decoration: none !important; }
+}

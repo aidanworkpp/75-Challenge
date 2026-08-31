@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
 const TABS = [
-  { href: "/",           label: "Today",     icon: "◉" },
-  { href: "/history",    label: "History",   icon: "▤" },
-  { href: "/insights",   label: "Insights",  icon: "▲" },
-  { href: "/rules",      label: "Rules",     icon: "❖" },
-  { href: "/motivation", label: "Motivate",  icon: "⚡" },
+  { href: "/",         label: "Today",    icon: "◉" },
+  { href: "/history",  label: "History",  icon: "▤" },
+  { href: "/insights", label: "Insights", icon: "▲" },
+  { href: "/rules",    label: "Rules",    icon: "❖" },
+  { href: "/coach",    label: "Coach",    icon: "⚡" },
 ];
 
 export default function BottomNav() {
@@ -18,7 +18,12 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 inset-x-0 border-t border-border bg-surface pb-safe z-40">
       <ul className="flex items-stretch justify-around max-w-lg mx-auto">
         {TABS.map((t) => {
-          const active = t.href === "/" ? path === "/" : path.startsWith(t.href);
+          const active =
+            t.href === "/"
+              ? path === "/"
+              : t.href === "/coach"
+                ? path.startsWith("/coach") || path === "/motivation"
+                : path.startsWith(t.href);
           return (
             <li key={t.href} className="flex-1">
               <Link
