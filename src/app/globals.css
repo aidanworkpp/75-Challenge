@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background-color: #0b0c0f;
+  color: #eef1f6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Prevent iOS zoom on form focus */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Safe area for mobile */
+.pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+.pt-safe { padding-top: max(env(safe-area-inset-top), 0.5rem); }
