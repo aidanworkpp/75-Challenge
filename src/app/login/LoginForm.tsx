@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // Two-step sign-in:
-//   1. Enter email → Supabase emails a 6-digit code (plus a magic link for laptop users).
+//   1. Enter email → Supabase emails a 6-8 digit code (plus a magic link for laptop users).
 //   2. Enter the code → verifyOtp → signed in.
 // Same-browser magic link still works via /auth/callback for people who click it.
 export default function LoginForm() {
@@ -115,20 +115,20 @@ export default function LoginForm() {
                 type="text"
                 required
                 inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
+                pattern="[0-9]{6,10}"
+                maxLength={10}
                 autoComplete="one-time-code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                className="mt-1 w-full rounded-md bg-surface border border-border px-3 py-3 text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-accent"
-                placeholder="000000"
+                className="mt-1 w-full rounded-md bg-surface border border-border px-3 py-3 text-center text-2xl tracking-[0.4em] font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+                placeholder="Enter code"
                 autoFocus
               />
             </label>
 
             <button
               type="submit"
-              disabled={status === "verifying" || code.length !== 6}
+              disabled={status === "verifying" || code.length < 6}
               className="w-full rounded-md bg-accent text-black font-semibold py-3 disabled:opacity-60"
             >
               {status === "verifying" ? "Verifying…" : "Sign in"}
