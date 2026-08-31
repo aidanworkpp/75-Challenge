@@ -5,10 +5,11 @@ import { getActiveChallengeBundle } from "@/lib/queries";
 import AppShell from "@/components/AppShell";
 import CommitmentRow from "@/components/CommitmentRow";
 import StreakBadge from "@/components/StreakBadge";
-import { challengeDayNumber, formatDayLong, todayIso } from "@/lib/date";
+import { challengeDayNumber, formatDayLong, isoAddDays, todayIso } from "@/lib/date";
 import { currentStreak } from "@/lib/streak";
 import { reconcileChallengeState } from "@/lib/challenge-state";
 import { isItemActiveOn } from "@/lib/completion";
+import LogYesterdayButton from "@/components/LogYesterdayButton";
 import type { DailyLog } from "@/lib/types";
 
 export default async function TodayPage() {
@@ -67,6 +68,11 @@ export default async function TodayPage() {
         </ul>
 
         <DayStatus complete={dayComplete} log={todaysLog} items={activeItems.length} />
+
+        <LogYesterdayButton
+          challengeStart={challenge.start_date}
+          challengeEnd={isoAddDays(challenge.start_date, challenge.length_days - 1)}
+        />
       </div>
     </AppShell>
   );

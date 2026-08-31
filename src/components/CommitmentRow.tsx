@@ -5,30 +5,30 @@ import clsx from "clsx";
 import type { CommitmentItem, DailyLogEntry } from "@/lib/types";
 import { setBooleanEntry } from "@/app/actions";
 
-// All rows are checkboxes now. Optimistic UI — the tick flips
+// All rows are checkboxes. Optimistic UI — the tick flips
 // immediately on click; server sync happens in the background.
+// dateIso lets the row target a specific date (used by /log-yesterday).
 export default function CommitmentRow({
   item,
   entry,
+  dateIso,
 }: {
   item: CommitmentItem;
   entry: DailyLogEntry | undefined;
+  dateIso?: string;
 }) {
   const serverHit = entry?.bool_value === true;
   const [hit, setHit] = useState(serverHit);
   const [, startTransition] = useTransition();
 
-  // If the server value changes (e.g. another device), pick it up.
-  useEffect(() => {
-    setHit(serverHit);
-  }, [serverHit]);
+  useEffect(() => { setHit(serverHit); }, [serverHit]);
 
   function toggle() {
     const next = !hit;
     setHit(next); // instant visual response
     startTransition(async () => {
       try {
-        await setBooleanEntry(item.id, next);
+        await setBooleanEntry(item.id, next, dateIso);
       } catch {
         setHit(!next); // roll back on error
       }

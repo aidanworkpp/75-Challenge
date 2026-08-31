@@ -7,6 +7,10 @@ export function todayIso(): string {
   return format(new Date(), "yyyy-MM-dd");
 }
 
+export function yesterdayIso(): string {
+  return format(addDays(new Date(), -1), "yyyy-MM-dd");
+}
+
 export function isoAddDays(iso: string, n: number): string {
   return format(addDays(parseISO(iso), n), "yyyy-MM-dd");
 }

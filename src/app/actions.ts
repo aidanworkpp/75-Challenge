@@ -52,6 +52,8 @@ async function recomputeAndPersistCompletion(dailyLogId: string) {
 }
 
 // All check-ins are boolean now (checkboxes on the Today screen).
+// dateIso lets the caller target a specific day (used by log-yesterday).
+// Server validates the date is within the challenge window and not in the future.
 export async function setBooleanEntry(itemId: string, value: boolean, dateIso?: string) {
   const { supabase, user } = await requireUser();
   const date = dateIso ?? todayIso();
@@ -60,6 +62,16 @@ export async function setBooleanEntry(itemId: string, value: boolean, dateIso?: 
   if (!item) throw new Error("Commitment not found");
   const { data: ch } = await supabase.from("challenges").select("*").eq("id", item.challenge_id).single();
   if (!ch || ch.user_id !== user.id) throw new Error("Not your challenge");
+
+  // Guard: date must be in the challenge window and not in the future.
+  const today = todayIso();
+  const endDate = (function () {
+    const d = new Date(ch.start_date + "T00:00:00");
+    d.setDate(d.getDate() + ch.length_days - 1);
+    return d.toISOString().slice(0, 10);
+  })();
+  if (date < ch.start_date || date > endDate) throw new Error("Date is outside the challenge window.");
+  if (date > today) throw new Error("Can't log entries for future dates.");
 
   const log = await upsertTodayLog(item.challenge_id, date);
 

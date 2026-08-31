@@ -4,6 +4,16 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "75-something",
   description: "A private, self-tracking challenge — your rules, your tier.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "75-something",
+  },
 };
 
 export const viewport: Viewport = {
