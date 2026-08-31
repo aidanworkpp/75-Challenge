@@ -17,10 +17,6 @@ export default async function SettingsPage() {
       <SettingsForm
         email={user.email ?? ""}
         displayName={profile?.display_name ?? ""}
-        timezone={profile?.timezone ?? "UTC"}
-        remindersEnabled={profile?.reminders_enabled ?? true}
-        morningHour={profile?.reminder_hour_morning ?? 7}
-        eveningHour={profile?.reminder_hour_evening ?? 20}
         activeChallengeId={challenge?.id ?? null}
       />
     </AppShell>

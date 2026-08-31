@@ -115,34 +115,6 @@ export async function updateDisplayName(name: string) {
   revalidatePath("/settings");
 }
 
-export async function syncTimezone(timezone: string) {
-  const { supabase, user } = await requireUser();
-  // Sanity-check: reject anything that doesn't look like an IANA name
-  if (!/^[A-Za-z_]+(?:\/[A-Za-z0-9_+\-]+){0,2}$/.test(timezone)) return;
-  await supabase.from("profiles").update({ timezone }).eq("id", user.id);
-}
-
-export async function updateReminderPrefs(input: {
-  enabled: boolean;
-  morningHour: number;
-  eveningHour: number;
-  timezone?: string;
-}) {
-  const { supabase, user } = await requireUser();
-  const morningHour = Math.min(23, Math.max(0, Math.round(input.morningHour)));
-  const eveningHour = Math.min(23, Math.max(0, Math.round(input.eveningHour)));
-  const patch: Record<string, unknown> = {
-    reminders_enabled: input.enabled,
-    reminder_hour_morning: morningHour,
-    reminder_hour_evening: eveningHour,
-  };
-  if (input.timezone && /^[A-Za-z_]+(?:\/[A-Za-z0-9_+\-]+){0,2}$/.test(input.timezone)) {
-    patch.timezone = input.timezone;
-  }
-  await supabase.from("profiles").update(patch).eq("id", user.id);
-  revalidatePath("/settings");
-}
-
 export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();

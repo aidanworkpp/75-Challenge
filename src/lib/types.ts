@@ -51,10 +51,6 @@ export interface DailyLogEntry {
 export interface Profile {
   id: string;
   display_name: string;
-  timezone: string;
-  reminder_hour_morning: number;
-  reminder_hour_evening: number;
-  reminders_enabled: boolean;
 }
 
 // Draft used in the setup wizard before persistence
