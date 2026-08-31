@@ -5,7 +5,7 @@ import Link from "next/link";
 import CommitmentRow from "@/components/CommitmentRow";
 import type { CommitmentItem, DailyLogEntry } from "@/lib/types";
 import { isItemActiveOn } from "@/lib/completion";
-import { formatDayLong } from "@/lib/date";
+import { appHourNow, formatDayLong } from "@/lib/date";
 
 // Client-side 12:00 cutoff. Server also validates the date is in-window
 // and not in the future, so this is the UX gate — not the source of truth.
@@ -24,7 +24,7 @@ export default function LogYesterdayScreen({
 
   useEffect(() => {
     function check() {
-      setExpired(new Date().getHours() >= 12);
+      setExpired(appHourNow() >= 12);
     }
     check();
     const t = setInterval(check, 30_000);
@@ -54,7 +54,7 @@ export default function LogYesterdayScreen({
         <div className="rounded-lg border border-danger/40 bg-danger/10 p-4">
           <div className="font-semibold text-danger">Too late</div>
           <div className="text-sm text-muted mt-1">
-            Log-yesterday closes at 12:00 local time. You&apos;ll need to catch up on today&apos;s items instead.
+            Log-yesterday closes at 12:00 (SAST). You&apos;ll need to catch up on today&apos;s items instead.
           </div>
         </div>
         <Link href="/" className="block text-center rounded-md bg-accent text-black font-semibold py-3">
@@ -71,7 +71,7 @@ export default function LogYesterdayScreen({
       <div className="rounded-lg border border-border bg-surface p-3 text-sm">
         <div className="font-medium">{formatDayLong(yesterdayIso)}</div>
         <div className="text-muted text-xs mt-1">
-          Backfilling entries for yesterday. Closes at 12:00 local time.
+          Backfilling entries for yesterday. Closes at 12:00 (SAST).
         </div>
       </div>
 

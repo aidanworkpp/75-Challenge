@@ -3,16 +3,17 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { settleYesterday } from "@/app/actions";
+import { appHourNow } from "@/lib/date";
 
 // Server render always leaves yesterday in the grace window.
-// Once local time passes 13:00, this component fires the settlement
+// Once SAST passes 13:00, this component fires the settlement
 // (which may fail the challenge if yesterday's required items weren't hit).
 export default function YesterdaySettler({ challengeId }: { challengeId: string }) {
   const router = useRouter();
   useEffect(() => {
     let cancelled = false;
     async function run() {
-      if (new Date().getHours() < 13) return;
+      if (appHourNow() < 13) return;
       try {
         await settleYesterday(challengeId);
         if (!cancelled) router.refresh();

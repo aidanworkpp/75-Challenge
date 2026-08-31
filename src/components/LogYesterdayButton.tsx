@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { appHourNow, yesterdayIso } from "@/lib/date";
 
-// Only rendered before 12:00 local. Refreshes its own visibility every minute.
+// Only rendered before 12:00 SAST. Refreshes its own visibility every minute.
 export default function LogYesterdayButton({
   challengeStart,
   challengeEnd,
@@ -15,12 +16,9 @@ export default function LogYesterdayButton({
 
   useEffect(() => {
     function update() {
-      const now = new Date();
-      const beforeNoon = now.getHours() < 12;
-      const y = new Date();
-      y.setDate(y.getDate() - 1);
-      const yesterdayIso = y.toISOString().slice(0, 10);
-      const yesterdayInWindow = yesterdayIso >= challengeStart && yesterdayIso <= challengeEnd;
+      const beforeNoon = appHourNow() < 12;
+      const y = yesterdayIso();
+      const yesterdayInWindow = y >= challengeStart && y <= challengeEnd;
       setVisible(beforeNoon && yesterdayInWindow);
     }
     update();

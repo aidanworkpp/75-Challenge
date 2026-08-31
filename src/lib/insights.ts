@@ -1,6 +1,6 @@
 import type { CommitmentItem, DailyLog, DailyLogEntry } from "./types";
-import { isEntryHit, isItemActiveOn } from "./completion";
-import { daysBetweenIso, todayIso } from "./date";
+import { isEntryHit, isItemActiveOn, isItemExcused } from "./completion";
+import { daysBetweenIso, isoAddDays, todayIso } from "./date";
 
 export interface CommitmentConsistency {
   item: CommitmentItem;
@@ -12,7 +12,7 @@ export interface CommitmentConsistency {
 // Elapsed days (inclusive) from challenge start up to min(today, end).
 export function elapsedDays(startDate: string, lengthDays: number): number {
   const today = todayIso();
-  const end = shiftDay(startDate, lengthDays - 1);
+  const end = isoAddDays(startDate, lengthDays - 1);
   const cap = today < end ? today : end;
   const n = daysBetweenIso(startDate, cap) + 1;
   return Math.max(0, n);
@@ -43,10 +43,12 @@ export function perCommitmentConsistency(
     let hits = 0;
     let activeDays = 0;
     for (let i = 0; i < elapsed; i++) {
-      const iso = shiftDay(startDate, i);
+      const iso = isoAddDays(startDate, i);
       if (!isItemActiveOn(item, iso)) continue;
-      activeDays += 1;
       const log = logByDate.get(iso);
+      // A rest-day / cheat-meal excusal removes that day from the denominator.
+      if (log && isItemExcused(item, { restDay: log.rest_day, cheatMeal: log.cheat_meal })) continue;
+      activeDays += 1;
       if (!log) continue;
       const es = entriesByLog.get(log.id) ?? [];
       const entry = es.find((e) => e.commitment_item_id === item.id);
@@ -59,10 +61,4 @@ export function perCommitmentConsistency(
       hitRate: activeDays === 0 ? 0 : hits / activeDays,
     };
   });
-}
-
-function shiftDay(iso: string, delta: number): string {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
 }

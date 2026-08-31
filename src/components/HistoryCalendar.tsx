@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, parseISO } from "date-fns";
 import type { CommitmentItem, DailyLog, DailyLogEntry } from "@/lib/types";
-import { isEntryHit, isItemActiveOn } from "@/lib/completion";
+import { isEntryHit, isItemActiveOn, isItemExcused } from "@/lib/completion";
 import { formatDayLong } from "@/lib/date";
 
 export default function HistoryCalendar({
@@ -100,9 +100,13 @@ export default function HistoryCalendar({
         <div className="rounded-lg border border-border bg-surface p-4 space-y-2">
           <div className="flex items-center justify-between">
             <div className="font-semibold">{formatDayLong(selected)}</div>
-            {selectedLog?.complete && (
-              <span className="text-xs text-success font-medium">Complete</span>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedLog?.rest_day && <span className="text-xs text-accent font-medium">Rest day</span>}
+              {selectedLog?.cheat_meal && <span className="text-xs text-accent font-medium">Cheat meal</span>}
+              {selectedLog?.complete && (
+                <span className="text-xs text-success font-medium">Complete</span>
+              )}
+            </div>
           </div>
           {!selectedLog && (
             <div className="text-muted text-sm">No entries logged for this day.</div>
@@ -113,12 +117,17 @@ export default function HistoryCalendar({
                 .filter((item) => isItemActiveOn(item, selected))
                 .map((item) => {
                   const entry = selectedEntries.find((e) => e.commitment_item_id === item.id);
+                  const excused = isItemExcused(item, {
+                    restDay: selectedLog.rest_day,
+                    cheatMeal: selectedLog.cheat_meal,
+                  });
                   const hit = isEntryHit(item, entry);
                   return (
                     <li key={item.id} className="flex items-center justify-between">
-                      <span className={hit ? "" : "text-muted"}>
-                        {hit ? "✓" : "·"} {item.label}
-                        {item.optional && <span className="text-xs text-muted italic"> (optional)</span>}
+                      <span className={excused ? "text-accent" : hit ? "" : "text-muted"}>
+                        {excused ? "–" : hit ? "✓" : "·"} {item.label}
+                        {excused && <span className="text-xs italic"> (excused)</span>}
+                        {!excused && item.optional && <span className="text-xs text-muted italic"> (optional)</span>}
                       </span>
                     </li>
                   );

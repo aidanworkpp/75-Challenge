@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     .eq("status", "active");
   if (chErr) return NextResponse.json({ error: chErr.message }, { status: 500 });
 
-  const today = todayIso(); // UTC "today" — good enough for a single daily job
+  const today = todayIso(); // SAST calendar day — matches how daily_logs are keyed
   const results: { userId: string; status: string }[] = [];
 
   for (const raw of activeChallenges ?? []) {

@@ -67,11 +67,7 @@ export async function setBooleanEntry(itemId: string, value: boolean, dateIso?: 
 
   // Guard: date must be in the challenge window and not in the future.
   const today = todayIso();
-  const endDate = (function () {
-    const d = new Date(ch.start_date + "T00:00:00");
-    d.setDate(d.getDate() + ch.length_days - 1);
-    return d.toISOString().slice(0, 10);
-  })();
+  const endDate = isoAddDays(ch.start_date, ch.length_days - 1);
   if (date < ch.start_date || date > endDate) throw new Error("Date is outside the challenge window.");
   if (date > today) throw new Error("Can't log entries for future dates.");
 

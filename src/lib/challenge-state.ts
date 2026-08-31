@@ -1,5 +1,5 @@
 import { createClient } from "./supabase/server";
-import { daysBetweenIso, todayIso } from "./date";
+import { daysBetweenIso, isoAddDays, todayIso } from "./date";
 
 // [A20] Yesterday is only "settled" once local time passes 13:00 the next day.
 //       - Server-side reconcile (called from page render) always uses
@@ -16,7 +16,7 @@ export async function reconcileChallengeState(
   if (!ch || ch.user_id !== userId || ch.status !== "active") return;
 
   const today = todayIso();
-  const endDate = shiftDay(ch.start_date, ch.length_days - 1);
+  const endDate = isoAddDays(ch.start_date, ch.length_days - 1);
   const isPastEnd = today > endDate;
 
   const { data: logs } = await supabase
@@ -34,7 +34,7 @@ export async function reconcileChallengeState(
 
   let anyMissed = false;
   for (let i = 0; i < daysToCheck; i++) {
-    const d = shiftDay(ch.start_date, i);
+    const d = isoAddDays(ch.start_date, i);
     if (!byDate.get(d)) { anyMissed = true; break; }
   }
 
@@ -46,16 +46,10 @@ export async function reconcileChallengeState(
     // For end-of-challenge completion we do check yesterday too — the challenge is over.
     let allComplete = true;
     for (let i = 0; i < elapsedPastDays; i++) {
-      const d = shiftDay(ch.start_date, i);
+      const d = isoAddDays(ch.start_date, i);
       if (!byDate.get(d)) { allComplete = false; break; }
     }
     const status = allComplete ? "completed" : "failed";
     await supabase.from("challenges").update({ status }).eq("id", challengeId);
   }
-}
-
-function shiftDay(iso: string, delta: number): string {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
 }
