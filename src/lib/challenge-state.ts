@@ -1,10 +1,16 @@
 import { createClient } from "./supabase/server";
 import { daysBetweenIso, todayIso } from "./date";
 
-// Idempotent: safe to call on every render.
-// Auto-marks challenge failed if restart_on_miss + any past day incomplete,
-// or completed if past end (failed if any past day incomplete).
-export async function reconcileChallengeState(challengeId: string, userId: string): Promise<void> {
+// [A20] Yesterday is only "settled" once local time passes 13:00 the next day.
+//       - Server-side reconcile (called from page render) always uses
+//         includeYesterday=false — never fails a challenge on yesterday's miss.
+//       - A client component checks local time and calls settleYesterday()
+//         (which passes includeYesterday=true) once it's past the cutoff.
+export async function reconcileChallengeState(
+  challengeId: string,
+  userId: string,
+  { includeYesterday }: { includeYesterday: boolean } = { includeYesterday: false },
+): Promise<void> {
   const supabase = createClient();
   const { data: ch } = await supabase.from("challenges").select("*").eq("id", challengeId).single();
   if (!ch || ch.user_id !== userId || ch.status !== "active") return;
@@ -23,8 +29,11 @@ export async function reconcileChallengeState(challengeId: string, userId: strin
     Math.max(daysBetweenIso(ch.start_date, today), 0),
     ch.length_days,
   );
+  // Yesterday sits in the grace window unless includeYesterday is true.
+  const daysToCheck = includeYesterday ? elapsedPastDays : Math.max(0, elapsedPastDays - 1);
+
   let anyMissed = false;
-  for (let i = 0; i < elapsedPastDays; i++) {
+  for (let i = 0; i < daysToCheck; i++) {
     const d = shiftDay(ch.start_date, i);
     if (!byDate.get(d)) { anyMissed = true; break; }
   }
@@ -34,7 +43,13 @@ export async function reconcileChallengeState(challengeId: string, userId: strin
     return;
   }
   if (isPastEnd) {
-    const status = anyMissed ? "failed" : "completed";
+    // For end-of-challenge completion we do check yesterday too — the challenge is over.
+    let allComplete = true;
+    for (let i = 0; i < elapsedPastDays; i++) {
+      const d = shiftDay(ch.start_date, i);
+      if (!byDate.get(d)) { allComplete = false; break; }
+    }
+    const status = allComplete ? "completed" : "failed";
     await supabase.from("challenges").update({ status }).eq("id", challengeId);
   }
 }

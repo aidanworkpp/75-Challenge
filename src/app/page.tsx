@@ -10,6 +10,7 @@ import { currentStreak } from "@/lib/streak";
 import { reconcileChallengeState } from "@/lib/challenge-state";
 import { isItemActiveOn } from "@/lib/completion";
 import LogYesterdayButton from "@/components/LogYesterdayButton";
+import YesterdaySettler from "@/components/YesterdaySettler";
 import type { DailyLog } from "@/lib/types";
 
 export default async function TodayPage() {
@@ -20,8 +21,9 @@ export default async function TodayPage() {
   const { challenge, items, logs, entries } = await getActiveChallengeBundle(user.id);
   if (!challenge) redirect("/setup");
 
-  // Refresh challenge status if past-end or restart-on-miss triggered
-  await reconcileChallengeState(challenge.id, user.id);
+  // Server-side reconcile always leaves yesterday in the grace window.
+  // <YesterdaySettler> triggers the yesterday check only after local 13:00.
+  await reconcileChallengeState(challenge.id, user.id, { includeYesterday: false });
   const refreshed = await getActiveChallengeBundle(user.id);
   if (!refreshed.challenge) {
     return (
@@ -73,6 +75,8 @@ export default async function TodayPage() {
           challengeStart={challenge.start_date}
           challengeEnd={isoAddDays(challenge.start_date, challenge.length_days - 1)}
         />
+
+        <YesterdaySettler challengeId={challenge.id} />
       </div>
     </AppShell>
   );

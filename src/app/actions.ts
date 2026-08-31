@@ -110,3 +110,14 @@ export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();
 }
+
+// Called from the client only when local time is past 13:00 — checks whether
+// yesterday's miss should now fail the challenge.
+export async function settleYesterday(challengeId: string) {
+  const { supabase, user } = await requireUser();
+  const { data: ch } = await supabase.from("challenges").select("user_id").eq("id", challengeId).single();
+  if (!ch || ch.user_id !== user.id) return;
+  const { reconcileChallengeState } = await import("@/lib/challenge-state");
+  await reconcileChallengeState(challengeId, user.id, { includeYesterday: true });
+  revalidatePath("/");
+}
