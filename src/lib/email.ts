@@ -1,15 +1,29 @@
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 import type { CommitmentItem, DailyLogEntry } from "./types";
 import { isEntryHit } from "./completion";
 
-export function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
+// Gmail SMTP via nodemailer. Requires:
+//   GMAIL_USER              — the sending Gmail address
+//   GMAIL_APP_PASSWORD      — a Google app password (NOT your normal password)
+//   (optional) GMAIL_FROM_NAME — display name shown next to the address
+//
+// Get an app password: https://myaccount.google.com/apppasswords
+// (Requires 2-step verification enabled on the account.)
+
+export function getMailer(): Transporter | null {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
 }
 
 export function fromAddress(): string {
-  return process.env.REMINDER_FROM_EMAIL ?? "reminders@example.com";
+  const user = process.env.GMAIL_USER ?? "reminders@example.com";
+  const name = process.env.GMAIL_FROM_NAME ?? "75-something";
+  return `"${name}" <${user}>`;
 }
 
 export function appUrl(): string {

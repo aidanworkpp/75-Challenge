@@ -22,7 +22,7 @@ in Settings.
 - Next.js 14 (App Router) + TypeScript + Tailwind
 - Supabase — Postgres + Auth (email magic link)
 - OpenAI (gpt-4o-mini) — motivation endpoint
-- Resend — daily reminder email
+- Gmail SMTP (via nodemailer) — daily reminder email
 - Vercel + Vercel Cron
 
 ---
@@ -44,11 +44,12 @@ npm install
 3. In **Authentication → URL Configuration** add `http://localhost:3000` (and later your prod URL) as an allowed redirect.
 4. Grab the project URL, `anon` key, and **`service_role` key** from **Settings → API**. The service role key is server-only — it bypasses RLS and is used by the cron endpoint.
 
-### 3. Resend
+### 3. Gmail app password
 
-1. Sign up at [resend.com](https://resend.com).
-2. Verify a domain (or sandbox `onboarding@resend.dev` for testing — but that only sends to your signup email, not the team).
-3. Copy an API key (`re_...`).
+1. Use any Gmail account (personal or workspace). This will be the sender address.
+2. Enable **2-Step Verification** on that account (Google requires it before app passwords work): [myaccount.google.com/security](https://myaccount.google.com/security)
+3. Generate an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) — name it "75-something" or similar.
+4. Copy the 16-character password (Google shows it once).
 
 ### 4. OpenAI
 
@@ -65,7 +66,7 @@ cp .env.local.example .env.local
 Fill in:
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENAI_API_KEY`
-- `RESEND_API_KEY`, `REMINDER_FROM_EMAIL`
+- `GMAIL_USER`, `GMAIL_APP_PASSWORD` (from step 3), optional `GMAIL_FROM_NAME`
 - `CRON_SECRET` — long random string (e.g. `openssl rand -hex 32`)
 - `NEXT_PUBLIC_SITE_URL`
 

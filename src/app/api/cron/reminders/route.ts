@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { getResend, fromAddress, afternoonTemplate } from "@/lib/email";
+import { getMailer, fromAddress, afternoonTemplate } from "@/lib/email";
 import { challengeDayNumber, todayIso } from "@/lib/date";
 import type { Challenge, CommitmentItem, DailyLogEntry } from "@/lib/types";
 
@@ -20,9 +20,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const resend = getResend();
-  if (!resend) {
-    return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
+  const mailer = getMailer();
+  if (!mailer) {
+    return NextResponse.json({ error: "GMAIL_USER / GMAIL_APP_PASSWORD not configured" }, { status: 500 });
   }
 
   const supabase = createServiceClient();
@@ -94,7 +94,7 @@ export async function GET(req: Request) {
     });
 
     try {
-      await resend.emails.send({
+      await mailer.sendMail({
         from: fromAddress(),
         to: email,
         subject: t.subject,
