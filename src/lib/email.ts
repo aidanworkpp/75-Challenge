@@ -23,7 +23,7 @@ export function getMailer(): Transporter | null {
 
 export function fromAddress(): string {
   const user = process.env.GMAIL_USER ?? "reminders@example.com";
-  const name = process.env.GMAIL_FROM_NAME ?? "75-something";
+  const name = process.env.GMAIL_FROM_NAME ?? "75 Challenge";
   return `"${name}" <${user}>`;
 }
 
@@ -101,7 +101,7 @@ function shell(inner: string): string {
         ${inner}
       </div>
       <p style="color:#8b93a3;font-size:12px;text-align:center;margin-top:16px">
-        75-something · <a href="${appUrl()}/settings" style="color:#8b93a3">manage reminders</a>
+        75 Challenge · <a href="${appUrl()}/settings" style="color:#8b93a3">manage reminders</a>
       </p>
     </div>
   </body></html>`;

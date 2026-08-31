@@ -1,4 +1,4 @@
-# 75-something
+# 75 Challenge
 
 A mobile-first personal-discipline tracker modelled on the 75 Hard programme,
 with adjustable difficulty. Each user picks a tier (Hard / Medium / Soft),
@@ -48,7 +48,7 @@ npm install
 
 1. Use any Gmail account (personal or workspace). This will be the sender address.
 2. Enable **2-Step Verification** on that account (Google requires it before app passwords work): [myaccount.google.com/security](https://myaccount.google.com/security)
-3. Generate an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) — name it "75-something" or similar.
+3. Generate an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) — name it "75 Challenge" or similar.
 4. Copy the 16-character password (Google shows it once).
 
 ### 4. OpenAI

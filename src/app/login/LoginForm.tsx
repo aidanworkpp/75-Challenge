@@ -61,7 +61,7 @@ export default function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-bg text-text">
       <div className="w-full max-w-sm space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">75-something</h1>
+          <h1 className="text-3xl font-bold">75 Challenge</h1>
           <p className="text-muted mt-2">A private tracker for your own version of the challenge.</p>
         </div>
 
