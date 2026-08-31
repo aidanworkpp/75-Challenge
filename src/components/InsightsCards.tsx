@@ -7,6 +7,9 @@ export default function InsightsCards({
   currentStreak,
   longestStreak,
   consistency,
+  restUsed,
+  cheatUsed,
+  showAllowances,
 }: {
   completionRate: number;
   elapsed: number;
@@ -14,6 +17,9 @@ export default function InsightsCards({
   currentStreak: number;
   longestStreak: number;
   consistency: CommitmentConsistency[];
+  restUsed: number;
+  cheatUsed: number;
+  showAllowances: boolean;
 }) {
   const sorted = [...consistency].sort((a, b) => b.hitRate - a.hitRate);
   const most = sorted[0];
@@ -27,6 +33,13 @@ export default function InsightsCards({
         <Stat label="Current streak" value={String(currentStreak)} sub={currentStreak === 1 ? "day" : "days"} />
         <Stat label="Longest streak" value={String(longestStreak)} sub={longestStreak === 1 ? "day" : "days"} />
       </div>
+
+      {showAllowances && (
+        <div className="grid grid-cols-2 gap-3">
+          <Stat label="Rest days taken" value={String(restUsed)} sub={restUsed === 1 ? "day off" : "days off"} />
+          <Stat label="Cheat meals used" value={String(cheatUsed)} sub={cheatUsed === 1 ? "meal" : "meals"} />
+        </div>
+      )}
 
       {most && least && most.item.id !== least.item.id && (
         <div className="rounded-lg border border-border bg-surface p-4 space-y-2">

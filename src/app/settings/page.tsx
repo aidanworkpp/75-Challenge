@@ -18,6 +18,7 @@ export default async function SettingsPage() {
         email={user.email ?? ""}
         displayName={profile?.display_name ?? ""}
         remindersEnabled={profile?.reminders_enabled ?? true}
+        accent={profile?.accent ?? "orange"}
         activeChallengeId={challenge?.id ?? null}
       />
     </AppShell>

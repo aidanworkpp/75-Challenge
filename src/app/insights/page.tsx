@@ -19,6 +19,9 @@ export default async function InsightsPage() {
   const cur = currentStreak(logs);
   const lng = longestStreak(logs);
   const consistency = perCommitmentConsistency(items, logs, entries, challenge.start_date, elapsed);
+  const restUsed = logs.filter((l) => l.rest_day).length;
+  const cheatUsed = logs.filter((l) => l.cheat_meal).length;
+  const hasAllowances = challenge.rest_days_per_week > 0 || challenge.cheat_meals_per_week > 0;
 
   return (
     <AppShell title="Insights">
@@ -32,6 +35,9 @@ export default async function InsightsPage() {
           currentStreak={cur}
           longestStreak={lng}
           consistency={consistency}
+          restUsed={restUsed}
+          cheatUsed={cheatUsed}
+          showAllowances={hasAllowances}
         />
       )}
     </AppShell>

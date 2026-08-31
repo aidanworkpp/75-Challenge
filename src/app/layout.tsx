@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import type { CSSProperties } from "react";
 import "./globals.css";
+import { createClient } from "@/lib/supabase/server";
+import { accentRgb } from "@/lib/accents";
 
 export const metadata: Metadata = {
   title: "75 Challenge",
@@ -23,9 +26,18 @@ export const viewport: Viewport = {
   themeColor: "#0b0c0f",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let accent = "orange";
+  if (user) {
+    const { data } = await supabase.from("profiles").select("accent").eq("id", user.id).maybeSingle();
+    if (data?.accent) accent = data.accent;
+  }
+  const rootStyle = { "--accent-rgb": accentRgb(accent) } as CSSProperties;
+
   return (
-    <html lang="en">
+    <html lang="en" style={rootStyle}>
       <body className="min-h-screen bg-bg text-text font-sans">{children}</body>
     </html>
   );

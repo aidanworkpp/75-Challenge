@@ -139,6 +139,14 @@ export async function setRemindersEnabled(enabled: boolean) {
   revalidatePath("/settings");
 }
 
+export async function setAccent(accent: string) {
+  const { supabase, user } = await requireUser();
+  const { ACCENTS } = await import("@/lib/accents");
+  if (!ACCENTS.some((a) => a.key === accent)) return;
+  await supabase.from("profiles").update({ accent }).eq("id", user.id);
+  revalidatePath("/", "layout");
+}
+
 export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();

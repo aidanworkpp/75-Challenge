@@ -2,24 +2,41 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { endChallenge, setRemindersEnabled, signOut, updateDisplayName } from "@/app/actions";
+import clsx from "clsx";
+import { endChallenge, setAccent, setRemindersEnabled, signOut, updateDisplayName } from "@/app/actions";
+import { ACCENTS } from "@/lib/accents";
 
 export default function SettingsForm({
   email,
   displayName,
   remindersEnabled,
+  accent,
   activeChallengeId,
 }: {
   email: string;
   displayName: string;
   remindersEnabled: boolean;
+  accent: string;
   activeChallengeId: string | null;
 }) {
   const [name, setName] = useState(displayName);
   const [reminders, setReminders] = useState(remindersEnabled);
+  const [accentKey, setAccentKey] = useState(accent);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+
+  function chooseAccent(key: string, rgb: string) {
+    setAccentKey(key);
+    // Instant visual feedback — set the CSS var immediately, then persist.
+    try {
+      document.documentElement.style.setProperty("--accent-rgb", rgb);
+    } catch { /* ignore */ }
+    startTransition(async () => {
+      await setAccent(key);
+      router.refresh();
+    });
+  }
 
   function saveName() {
     startTransition(async () => {
@@ -76,6 +93,32 @@ export default function SettingsForm({
           >
             {saved ? "Saved" : "Save"}
           </button>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm uppercase tracking-wider text-muted">Accent colour</h2>
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <div className="flex flex-wrap gap-3">
+            {ACCENTS.map((a) => {
+              const active = accentKey === a.key;
+              return (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={() => chooseAccent(a.key, a.rgb)}
+                  aria-label={a.label}
+                  className={clsx(
+                    "w-9 h-9 rounded-full border-2 transition-transform",
+                    active ? "border-text scale-110" : "border-transparent",
+                  )}
+                  style={{ backgroundColor: `rgb(${a.rgb})` }}
+                >
+                  {active && <span className="text-black text-sm font-bold">✓</span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 

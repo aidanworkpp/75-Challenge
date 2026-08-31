@@ -4,6 +4,8 @@
 
 :root {
   color-scheme: dark;
+  /* Default accent (orange). Overridden per-user via an inline style on <html>. */
+  --accent-rgb: 249 115 22;
 }
 
 html, body {
