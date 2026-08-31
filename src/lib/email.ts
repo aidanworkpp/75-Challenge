@@ -1,6 +1,7 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import type { CommitmentItem, DailyLogEntry } from "./types";
-import { isEntryHit } from "./completion";
+import { isEntryHit, isItemActiveOn } from "./completion";
+import { todayIso } from "./date";
 
 // Gmail SMTP via nodemailer. Requires:
 //   GMAIL_USER              — the sending Gmail address
@@ -38,7 +39,9 @@ export function afternoonTemplate(opts: {
   items: CommitmentItem[];
   entries: DailyLogEntry[];
 }) {
-  const missed = opts.items.filter(
+  const today = todayIso();
+  const activeItems = opts.items.filter((i) => isItemActiveOn(i, today));
+  const missed = activeItems.filter(
     (i) => !i.optional && !isEntryHit(i, opts.entries.find((e) => e.commitment_item_id === i.id)),
   );
   const remaining = missed.length;
@@ -48,18 +51,13 @@ export function afternoonTemplate(opts: {
       ? `Day ${opts.dayNumber} · already done`
       : `Day ${opts.dayNumber} · ${remaining} left to finish today`;
 
-  const listHtml = opts.items
+  const listHtml = activeItems
     .map((i) => {
       const entry = opts.entries.find((e) => e.commitment_item_id === i.id);
       const hit = isEntryHit(i, entry);
       const mark = hit ? "✓" : "○";
       const colour = hit ? "#22c55e" : "#8b93a3";
-      let detail = "";
-      if (i.type === "numeric" && i.target_value) {
-        const v = entry?.numeric_value ?? 0;
-        detail = ` <span style="color:#8b93a3">${v}/${i.target_value}${i.unit ? " " + i.unit : ""}</span>`;
-      }
-      return `<li style="margin:6px 0;color:${colour}">${mark} ${escapeHtml(i.label)}${detail}</li>`;
+      return `<li style="margin:6px 0;color:${colour}">${mark} ${escapeHtml(i.label)}</li>`;
     })
     .join("");
 
@@ -81,12 +79,12 @@ export function afternoonTemplate(opts: {
     (remaining === 0
       ? `Everything required is ticked. Nice.\n\n`
       : `${remaining} required item${remaining === 1 ? "" : "s"} outstanding.\n\n`) +
-    opts.items
+    activeItems
       .map((i) => {
         const entry = opts.entries.find((e) => e.commitment_item_id === i.id);
         const hit = isEntryHit(i, entry);
         const mark = hit ? "[x]" : "[ ]";
-        return `${mark} ${i.label}${i.type === "numeric" && i.target_value ? ` (${entry?.numeric_value ?? 0}/${i.target_value}${i.unit ? " " + i.unit : ""})` : ""}`;
+        return `${mark} ${i.label}`;
       })
       .join("\n") +
     `\n\n${appUrl()}/`;

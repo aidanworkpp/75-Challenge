@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TIER_LIST, TIER_TEMPLATES } from "@/lib/tiers";
+import { ALL_WEEKDAYS, TIER_LIST, TIER_TEMPLATES, WEEKDAY_LABELS, photoDraft } from "@/lib/tiers";
 import type { CommitmentCategory, CommitmentDraft, CommitmentType, Tier } from "@/lib/types";
 import { todayIso } from "@/lib/date";
 import { createChallenge } from "@/app/setup/actions";
@@ -15,6 +15,8 @@ export default function ChallengeSetupWizard() {
   const [step, setStep] = useState<Step>(1);
   const [tier, setTier] = useState<Tier>("hard");
   const [commitments, setCommitments] = useState<CommitmentDraft[]>(TIER_TEMPLATES.hard.commitments);
+  const [photoEnabled, setPhotoEnabled] = useState<boolean>(TIER_TEMPLATES.hard.photoDefault.enabled);
+  const [photoWeekdays, setPhotoWeekdays] = useState<number[]>(TIER_TEMPLATES.hard.photoDefault.weekdays);
   const [restartOnMiss, setRestartOnMiss] = useState<boolean>(TIER_TEMPLATES.hard.restart_on_miss);
   const [lengthDays, setLengthDays] = useState<number>(TIER_TEMPLATES.hard.defaultLength);
   const [startDate, setStartDate] = useState<string>(todayIso());
@@ -22,40 +24,56 @@ export default function ChallengeSetupWizard() {
   const [error, setError] = useState<string | null>(null);
 
   function pickTier(t: Exclude<Tier, "custom">) {
+    const tpl = TIER_TEMPLATES[t];
     setTier(t);
-    setCommitments(TIER_TEMPLATES[t].commitments.map((c) => ({ ...c })));
-    setRestartOnMiss(TIER_TEMPLATES[t].restart_on_miss);
-    setLengthDays(TIER_TEMPLATES[t].defaultLength);
+    setCommitments(tpl.commitments.map((c) => ({ ...c })));
+    setPhotoEnabled(tpl.photoDefault.enabled);
+    setPhotoWeekdays([...tpl.photoDefault.weekdays]);
+    setRestartOnMiss(tpl.restart_on_miss);
+    setLengthDays(tpl.defaultLength);
+  }
+
+  function markCustom() {
+    if (tier !== "custom") setTier("custom");
   }
 
   function updateCommitment(i: number, patch: Partial<CommitmentDraft>) {
     setCommitments((cs) => cs.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
-    if (tier !== "custom") setTier("custom");
+    markCustom();
   }
 
   function removeCommitment(i: number) {
     setCommitments((cs) => cs.filter((_, idx) => idx !== i));
-    if (tier !== "custom") setTier("custom");
+    markCustom();
   }
 
   function addCommitment() {
     setCommitments((cs) => [
       ...cs,
-      { label: "New commitment", type: "boolean", target_value: null, unit: null, category: "custom", optional: false },
+      { label: "New commitment", type: "boolean", target_value: null, unit: null, category: "custom", optional: false, active_weekdays: null },
     ]);
-    if (tier !== "custom") setTier("custom");
+    markCustom();
+  }
+
+  function togglePhotoWeekday(d: number) {
+    setPhotoWeekdays((wd) => (wd.includes(d) ? wd.filter((x) => x !== d) : [...wd, d].sort((a, b) => a - b)));
+    markCustom();
   }
 
   async function submit() {
     setSubmitting(true);
     setError(null);
     try {
+      const allCommitments = [...commitments];
+      if (photoEnabled && photoWeekdays.length > 0) {
+        allCommitments.push(photoDraft(photoWeekdays));
+      }
       await createChallenge({
         tier,
         startDate,
         lengthDays,
         restartOnMiss,
-        commitments,
+        commitments: allCommitments,
       });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -96,6 +114,11 @@ export default function ChallengeSetupWizard() {
                     {c.optional && <span className="text-muted italic"> (optional)</span>}
                   </li>
                 ))}
+                {t.photoDefault.enabled && (
+                  <li>· Progress photo <span className="text-muted italic">
+                    ({t.photoDefault.weekdays.length === 7 ? "every day" : t.photoDefault.weekdays.map((d) => WEEKDAY_LABELS[d]).join("·")})
+                  </span></li>
+                )}
               </ul>
             </button>
           ))}
@@ -111,7 +134,8 @@ export default function ChallengeSetupWizard() {
       {step === 2 && (
         <section className="space-y-3">
           <p className="text-muted text-sm">
-            Edit your commitments. Optional items count towards stats but don&apos;t block a &quot;complete&quot; day.
+            Edit your commitments. On the daily screen these all show as checkboxes — the number below is the
+            minimum you&apos;re committing to.
           </p>
           <ul className="space-y-2">
             {commitments.map((c, i) => (
@@ -137,7 +161,7 @@ export default function ChallengeSetupWizard() {
                       }}
                     >
                       <option value="boolean">Yes/no</option>
-                      <option value="numeric">Numeric target</option>
+                      <option value="numeric">With a minimum target</option>
                     </select>
                   </label>
                   <label className="flex flex-col">
@@ -155,7 +179,7 @@ export default function ChallengeSetupWizard() {
                   {c.type === "numeric" && (
                     <>
                       <label className="flex flex-col">
-                        <span className="text-muted text-xs">Target</span>
+                        <span className="text-muted text-xs">Minimum</span>
                         <input
                           type="number"
                           step="0.1"
@@ -202,11 +226,57 @@ export default function ChallengeSetupWizard() {
           >
             + Add commitment
           </button>
-          <div className="flex gap-2">
+
+          {/* Progress photos section */}
+          <div className="rounded-lg border border-border bg-surface p-3 space-y-3 mt-4">
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={photoEnabled}
+                onChange={(e) => { setPhotoEnabled(e.target.checked); markCustom(); }}
+              />
+              <span className="text-sm">
+                <span className="font-medium">Track progress photos</span>
+                <span className="block text-muted">Tick if you want a photo commitment. Pick which weekdays it applies.</span>
+              </span>
+            </label>
+            {photoEnabled && (
+              <div>
+                <div className="text-xs text-muted mb-2">Weekdays</div>
+                <div className="flex gap-1">
+                  {WEEKDAY_LABELS.map((lbl, d) => {
+                    const on = photoWeekdays.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => togglePhotoWeekday(d)}
+                        className={clsx(
+                          "flex-1 aspect-square rounded-md border text-sm font-medium",
+                          on ? "bg-accent text-black border-accent" : "bg-surface2 border-border text-muted",
+                        )}
+                        aria-label={`Toggle ${lbl}`}
+                      >
+                        {lbl}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex gap-2 text-xs">
+                  <button type="button" className="text-muted underline" onClick={() => { setPhotoWeekdays(ALL_WEEKDAYS); markCustom(); }}>Every day</button>
+                  <button type="button" className="text-muted underline" onClick={() => { setPhotoWeekdays([0]); markCustom(); }}>Sundays only</button>
+                  <button type="button" className="text-muted underline" onClick={() => { setPhotoWeekdays([]); markCustom(); }}>Clear</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-2">
             <button onClick={() => setStep(1)} className="flex-1 rounded-md bg-surface border border-border py-3">Back</button>
             <button
               onClick={() => setStep(3)}
-              disabled={commitments.length === 0}
+              disabled={commitments.length === 0 && !photoEnabled}
               className="flex-1 rounded-md bg-accent text-black font-semibold py-3 disabled:opacity-60"
             >
               Continue

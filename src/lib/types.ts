@@ -19,6 +19,7 @@ export interface CommitmentItem {
   category: CommitmentCategory;
   optional: boolean;
   sort_order: number;
+  active_weekdays: number[] | null; // null = every day; else 0=Sunday…6=Saturday
 }
 
 export interface Challenge {
@@ -62,4 +63,5 @@ export interface CommitmentDraft {
   unit: string | null;
   category: CommitmentCategory;
   optional: boolean;
+  active_weekdays: number[] | null; // null = every day
 }

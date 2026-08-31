@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import clsx from "clsx";
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, parseISO } from "date-fns";
 import type { CommitmentItem, DailyLog, DailyLogEntry } from "@/lib/types";
-import { isEntryHit } from "@/lib/completion";
+import { isEntryHit, isItemActiveOn } from "@/lib/completion";
 import { formatDayLong } from "@/lib/date";
 
 export default function HistoryCalendar({
@@ -109,23 +109,20 @@ export default function HistoryCalendar({
           )}
           {selectedLog && (
             <ul className="space-y-1 text-sm">
-              {items.map((item) => {
-                const entry = selectedEntries.find((e) => e.commitment_item_id === item.id);
-                const hit = isEntryHit(item, entry);
-                return (
-                  <li key={item.id} className="flex items-center justify-between">
-                    <span className={hit ? "" : "text-muted"}>
-                      {hit ? "✓" : "·"} {item.label}
-                      {item.optional && <span className="text-xs text-muted italic"> (optional)</span>}
-                    </span>
-                    {item.type === "numeric" && (
-                      <span className="text-muted">
-                        {entry?.numeric_value ?? 0}/{item.target_value}{item.unit ? ` ${item.unit}` : ""}
+              {items
+                .filter((item) => isItemActiveOn(item, selected))
+                .map((item) => {
+                  const entry = selectedEntries.find((e) => e.commitment_item_id === item.id);
+                  const hit = isEntryHit(item, entry);
+                  return (
+                    <li key={item.id} className="flex items-center justify-between">
+                      <span className={hit ? "" : "text-muted"}>
+                        {hit ? "✓" : "·"} {item.label}
+                        {item.optional && <span className="text-xs text-muted italic"> (optional)</span>}
                       </span>
-                    )}
-                  </li>
-                );
-              })}
+                    </li>
+                  );
+                })}
             </ul>
           )}
         </div>

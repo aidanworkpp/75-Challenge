@@ -18,7 +18,7 @@ export default async function InsightsPage() {
   const rate = completionRate(logs, elapsed);
   const cur = currentStreak(logs);
   const lng = longestStreak(logs);
-  const consistency = perCommitmentConsistency(items, logs, entries, elapsed);
+  const consistency = perCommitmentConsistency(items, logs, entries, challenge.start_date, elapsed);
 
   return (
     <AppShell title="Insights">

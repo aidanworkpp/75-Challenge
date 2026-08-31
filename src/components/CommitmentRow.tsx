@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import clsx from "clsx";
 import type { CommitmentItem, DailyLogEntry } from "@/lib/types";
-import { isEntryHit } from "@/lib/completion";
-import { setBooleanEntry, setNumericEntry } from "@/app/actions";
+import { setBooleanEntry } from "@/app/actions";
 
+// All rows are checkboxes now. Optimistic UI — the tick flips
+// immediately on click; server sync happens in the background.
 export default function CommitmentRow({
   item,
   entry,
@@ -13,108 +14,64 @@ export default function CommitmentRow({
   item: CommitmentItem;
   entry: DailyLogEntry | undefined;
 }) {
-  const [pending, startTransition] = useTransition();
-  const hit = isEntryHit(item, entry);
+  const serverHit = entry?.bool_value === true;
+  const [hit, setHit] = useState(serverHit);
+  const [, startTransition] = useTransition();
 
-  if (item.type === "boolean") {
-    return (
-      <button
-        onClick={() =>
-          startTransition(async () => {
-            await setBooleanEntry(item.id, !hit);
-          })
-        }
-        disabled={pending}
-        className={clsx(
-          "w-full flex items-center gap-3 rounded-lg border p-3 text-left",
-          hit ? "bg-success/10 border-success/40" : "bg-surface border-border",
-        )}
-      >
-        <span
-          className={clsx(
-            "w-6 h-6 rounded-md border-2 flex items-center justify-center text-sm shrink-0",
-            hit ? "bg-success border-success text-black" : "border-border",
-          )}
-        >
-          {hit ? "✓" : ""}
-        </span>
-        <div className="flex-1">
-          <div className="font-medium">{item.label}</div>
-          {item.optional && <div className="text-xs text-muted">optional</div>}
-        </div>
-      </button>
-    );
-  }
+  // If the server value changes (e.g. another device), pick it up.
+  useEffect(() => {
+    setHit(serverHit);
+  }, [serverHit]);
 
-  return <NumericRow item={item} entry={entry} pending={pending} startTransition={startTransition} />;
-}
-
-function NumericRow({
-  item,
-  entry,
-  pending,
-  startTransition,
-}: {
-  item: CommitmentItem;
-  entry: DailyLogEntry | undefined;
-  pending: boolean;
-  startTransition: React.TransitionStartFunction;
-}) {
-  const [value, setValue] = useState<string>(
-    entry?.numeric_value != null ? String(entry.numeric_value) : "",
-  );
-  const target = item.target_value ?? 0;
-  const numericValue = Number(value || 0);
-  const hit = !!value && numericValue >= target;
-
-  function save(v: string) {
-    setValue(v);
-    const num = Number(v || 0);
+  function toggle() {
+    const next = !hit;
+    setHit(next); // instant visual response
     startTransition(async () => {
-      await setNumericEntry(item.id, num);
+      try {
+        await setBooleanEntry(item.id, next);
+      } catch {
+        setHit(!next); // roll back on error
+      }
     });
   }
 
+  const descriptor = describeTarget(item);
+
   return (
-    <div
+    <button
+      type="button"
+      onClick={toggle}
       className={clsx(
-        "rounded-lg border p-3",
-        hit ? "bg-success/10 border-success/40" : "bg-surface border-border",
+        "w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+        hit ? "bg-success/10 border-success/40" : "bg-surface border-border active:bg-surface2",
       )}
     >
-      <div className="flex items-center gap-3">
-        <span
-          className={clsx(
-            "w-6 h-6 rounded-md border-2 flex items-center justify-center text-sm shrink-0",
-            hit ? "bg-success border-success text-black" : "border-border",
-          )}
-        >
-          {hit ? "✓" : ""}
-        </span>
-        <div className="flex-1">
-          <div className="font-medium">{item.label}</div>
+      <span
+        className={clsx(
+          "w-7 h-7 rounded-md border-2 flex items-center justify-center text-base shrink-0",
+          hit ? "bg-success border-success text-black" : "border-border",
+        )}
+      >
+        {hit ? "✓" : ""}
+      </span>
+      <div className="flex-1">
+        <div className="font-medium">{item.label}</div>
+        {(descriptor || item.optional) && (
           <div className="text-xs text-muted">
-            Target: {target}{item.unit ? ` ${item.unit}` : ""}
-            {item.optional && <span> · optional</span>}
+            {descriptor}
+            {descriptor && item.optional && " · "}
+            {item.optional && "optional"}
           </div>
-        </div>
+        )}
       </div>
-      <div className="mt-2 flex items-center gap-2">
-        <input
-          type="number"
-          inputMode="decimal"
-          step="0.1"
-          min="0"
-          value={value}
-          onChange={(e) => save(e.target.value)}
-          disabled={pending}
-          className="flex-1 bg-surface2 border border-border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent"
-          placeholder="0"
-        />
-        <span className="text-sm text-muted min-w-[3rem] text-right">
-          / {target}{item.unit ? ` ${item.unit}` : ""}
-        </span>
-      </div>
-    </div>
+    </button>
   );
+}
+
+function describeTarget(item: CommitmentItem): string {
+  if (item.type === "numeric" && item.target_value != null) {
+    const unit = item.unit ?? "";
+    return `${item.target_value}${unit ? " " + unit : ""} minimum`;
+  }
+  return "";
 }

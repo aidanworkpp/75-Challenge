@@ -55,6 +55,7 @@ export async function createChallenge(input: CreateChallengeInput) {
     category: c.category,
     optional: c.optional,
     sort_order: i,
+    active_weekdays: c.active_weekdays,
   }));
   const { error: itErr } = await supabase.from("commitment_items").insert(itemsPayload);
   if (itErr) throw new Error(itErr.message);

@@ -8,6 +8,7 @@ import StreakBadge from "@/components/StreakBadge";
 import { challengeDayNumber, formatDayLong, todayIso } from "@/lib/date";
 import { currentStreak } from "@/lib/streak";
 import { reconcileChallengeState } from "@/lib/challenge-state";
+import { isItemActiveOn } from "@/lib/completion";
 import type { DailyLog } from "@/lib/types";
 
 export default async function TodayPage() {
@@ -35,6 +36,9 @@ export default async function TodayPage() {
     ? entries.filter((e) => e.daily_log_id === todaysLog.id)
     : [];
 
+  // Only show items active today (e.g. photo scheduled for Sundays hides on other days)
+  const activeItems = items.filter((i) => isItemActiveOn(i, today));
+
   const dayNum = challengeDayNumber(challenge.start_date, today);
   const streak = currentStreak(logs);
   const dayComplete = todaysLog?.complete ?? false;
@@ -52,7 +56,7 @@ export default async function TodayPage() {
         )}
 
         <ul className="space-y-2">
-          {items.map((item) => {
+          {activeItems.map((item) => {
             const entry = todaysEntries.find((e) => e.commitment_item_id === item.id);
             return (
               <li key={item.id}>
@@ -62,7 +66,7 @@ export default async function TodayPage() {
           })}
         </ul>
 
-        <DayStatus complete={dayComplete} log={todaysLog} items={items.length} />
+        <DayStatus complete={dayComplete} log={todaysLog} items={activeItems.length} />
       </div>
     </AppShell>
   );

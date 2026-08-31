@@ -1,12 +1,12 @@
 import type { CommitmentItem, DailyLog, DailyLogEntry } from "./types";
-import { isEntryHit } from "./completion";
+import { isEntryHit, isItemActiveOn } from "./completion";
 import { daysBetweenIso, todayIso } from "./date";
 
 export interface CommitmentConsistency {
   item: CommitmentItem;
   hitRate: number; // 0..1
   hits: number;
-  totalDays: number;
+  totalDays: number; // number of elapsed days on which this item was active
 }
 
 // Elapsed days (inclusive) from challenge start up to min(today, end).
@@ -28,6 +28,7 @@ export function perCommitmentConsistency(
   items: CommitmentItem[],
   logs: DailyLog[],
   entries: DailyLogEntry[],
+  startDate: string,
   elapsed: number,
 ): CommitmentConsistency[] {
   const entriesByLog = new Map<string, DailyLogEntry[]>();
@@ -36,10 +37,17 @@ export function perCommitmentConsistency(
     arr.push(e);
     entriesByLog.set(e.daily_log_id, arr);
   }
+  const logByDate = new Map(logs.map((l) => [l.log_date, l]));
 
   return items.map((item) => {
     let hits = 0;
-    for (const log of logs) {
+    let activeDays = 0;
+    for (let i = 0; i < elapsed; i++) {
+      const iso = shiftDay(startDate, i);
+      if (!isItemActiveOn(item, iso)) continue;
+      activeDays += 1;
+      const log = logByDate.get(iso);
+      if (!log) continue;
       const es = entriesByLog.get(log.id) ?? [];
       const entry = es.find((e) => e.commitment_item_id === item.id);
       if (isEntryHit(item, entry)) hits += 1;
@@ -47,8 +55,8 @@ export function perCommitmentConsistency(
     return {
       item,
       hits,
-      totalDays: elapsed,
-      hitRate: elapsed === 0 ? 0 : hits / elapsed,
+      totalDays: activeDays,
+      hitRate: activeDays === 0 ? 0 : hits / activeDays,
     };
   });
 }
