@@ -51,6 +51,7 @@ export interface DailyLogEntry {
 export interface Profile {
   id: string;
   display_name: string;
+  reminders_enabled: boolean;
 }
 
 // Draft used in the setup wizard before persistence

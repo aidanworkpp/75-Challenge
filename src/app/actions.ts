@@ -115,6 +115,12 @@ export async function updateDisplayName(name: string) {
   revalidatePath("/settings");
 }
 
+export async function setRemindersEnabled(enabled: boolean) {
+  const { supabase, user } = await requireUser();
+  await supabase.from("profiles").update({ reminders_enabled: enabled }).eq("id", user.id);
+  revalidatePath("/settings");
+}
+
 export async function signOut() {
   const { supabase } = await requireUser();
   await supabase.auth.signOut();

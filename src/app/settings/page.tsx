@@ -17,6 +17,7 @@ export default async function SettingsPage() {
       <SettingsForm
         email={user.email ?? ""}
         displayName={profile?.display_name ?? ""}
+        remindersEnabled={profile?.reminders_enabled ?? true}
         activeChallengeId={challenge?.id ?? null}
       />
     </AppShell>

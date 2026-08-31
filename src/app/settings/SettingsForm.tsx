@@ -2,18 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { endChallenge, signOut, updateDisplayName } from "@/app/actions";
+import { endChallenge, setRemindersEnabled, signOut, updateDisplayName } from "@/app/actions";
 
 export default function SettingsForm({
   email,
   displayName,
+  remindersEnabled,
   activeChallengeId,
 }: {
   email: string;
   displayName: string;
+  remindersEnabled: boolean;
   activeChallengeId: string | null;
 }) {
   const [name, setName] = useState(displayName);
+  const [reminders, setReminders] = useState(remindersEnabled);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -23,6 +26,13 @@ export default function SettingsForm({
       await updateDisplayName(name);
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
+    });
+  }
+
+  function toggleReminders(next: boolean) {
+    setReminders(next);
+    startTransition(async () => {
+      await setRemindersEnabled(next);
     });
   }
 
@@ -67,6 +77,25 @@ export default function SettingsForm({
             {saved ? "Saved" : "Save"}
           </button>
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm uppercase tracking-wider text-muted">Reminders</h2>
+        <label className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={reminders}
+            onChange={(e) => toggleReminders(e.target.checked)}
+            disabled={pending}
+          />
+          <span className="text-sm">
+            <span className="font-medium">Daily afternoon check-in email</span>
+            <span className="block text-muted">
+              One reminder per day showing what you&apos;ve ticked and what&apos;s outstanding. Sent to <span className="text-text">{email}</span>.
+            </span>
+          </span>
+        </label>
       </section>
 
       <section className="space-y-3">

@@ -2,9 +2,14 @@ node_modules/
 .next/
 out/
 build/
+
+# Any env file — never commit real secrets
 .env
-.env.local
-.env*.local
+.env.*
+# ...except the placeholder templates
+!.env.example
+!.env.local.example
+
 *.log
 .DS_Store
 next-env.d.ts
