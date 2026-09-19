@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // Two-step sign-in:
-//   1. Enter email → Supabase emails a 6-8 digit code (plus a magic link for laptop users).
+//   1. Enter email → Supabase emails a 6-digit code (code-only; no magic link).
 //   2. Enter the code → verifyOtp → signed in.
-// Same-browser magic link still works via /auth/callback for people who click it.
+// We intentionally omit emailRedirectTo so no magic link is generated — email
+// security scanners pre-click magic links, which consumes the shared OTP token
+// and breaks the code. The /auth/callback route stays for any legacy links.
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -25,9 +27,6 @@ export default function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
     if (error) {
       setStatus("error");
